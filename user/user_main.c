@@ -45,7 +45,10 @@ MQTT_Client mqttClient;
 
 MQTT_Client* client_instance;
 
-
+//************************************
+//this is the interrupt service routine that will be executed when external interrupt 
+//on esp8266 gpio is triggered 
+//**********************************
 void ISR_GPIO(void)
 {
 	 static int status=0;
@@ -65,7 +68,11 @@ void ISR_GPIO(void)
 }
 
 
-
+//************************
+//call back function that will be called 
+//when esp is connected to acces point
+//it will also connect to mqtt server 
+//***********************
 static void ICACHE_FLASH_ATTR wifiConnectCb(uint8_t status)
 {
   if (status == STATION_GOT_IP) {
@@ -74,6 +81,13 @@ static void ICACHE_FLASH_ATTR wifiConnectCb(uint8_t status)
     MQTT_Disconnect(&mqttClient);
   }
 }
+
+
+//***********************************
+//call back function that will be executed when esp 
+//connects to mqtt server in this function the global interrupt is enabled so 
+//esp could respond to interrupt after this function 
+//***********************************
 static void ICACHE_FLASH_ATTR mqttConnectedCb(uint32_t *args)
 {  system_soft_wdt_feed();
   MQTT_Client* client = (MQTT_Client*)args;
@@ -171,6 +185,14 @@ void ICACHE_FLASH_ATTR user_rf_pre_init(void)
 
 }
 
+//********************************************************************
+//this function sets the gpio register to make gpio pin 5 as input
+//and it will also activate pull up and external interrupt for gpio 5
+//then it will set the mqtt client and broker settings
+//it will also register some callbacks to be called when some events occur
+//function at the end will connected to your netwrok b giving your ssid and password
+//******************************************************************
+
 
 static void ICACHE_FLASH_ATTR app_init(void)
 {  //os_timer_disarm(&test_timer);
@@ -191,10 +213,10 @@ static void ICACHE_FLASH_ATTR app_init(void)
       system_soft_wdt_feed();
 
 
-    MQTT_InitConnection(&mqttClient,"34.250.16.30",14553,0);
+    MQTT_InitConnection(&mqttClient,"34.250.x.x",14553,0);
   //MQTT_InitConnection(&mqttClient, "192.168.11.122", 1880, 0);
 
-  if ( !MQTT_InitClient(&mqttClient,"omar15","ngmckeqt","yq2zAFj7geW7",120,1) )
+  if ( !MQTT_InitClient(&mqttClient,"omar15","ngmcxxx","yq2zAFj7xxx",120,1) )
   {
     INFO("Failed to initialize properly. Check MQTT version.\r\n");
     return;
@@ -217,6 +239,12 @@ os_timer_setfn(&test_timer, (os_timer_func_t *)app_init, NULL);
 os_timer_arm(&test_timer,200, 0);
 	}*/
 
+
+
+//************************
+//this is the start of the code 
+// after system init function app init will be called
+//************************
 void user_init(void)
 {
   system_init_done_cb(app_init);
